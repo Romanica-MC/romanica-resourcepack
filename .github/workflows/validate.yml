@@ -24,6 +24,7 @@ jobs:
         run: python3 scripts/validate_packs.py .
 
       - name: resourcepack.zip rebuilds byte-for-byte
+        if: success() || failure()
         run: |
           python3 scripts/build_pack.py resourcepack.zip "$RUNNER_TEMP/rebuilt.zip"
           sha1sum resourcepack.zip "$RUNNER_TEMP/rebuilt.zip"
