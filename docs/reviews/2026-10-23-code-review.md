@@ -47,3 +47,24 @@ There is no CI, no build script, and no validation step. Releases (v1.0.0–v2.0
 4. **Stop committing zips; resume tagging.** Make releases the distribution channel again (the README already promises it), tag v2.0.7/v2.0.8 retroactively or supersede them with v2.0.9, and keep binaries out of the tree — at 48.9 MB you're one update from GitHub's 50 MB warning.
 5. **Add a CI validator** (a single Python script run on push): parse all JSON/`.mcmeta`, verify PNG signatures and dimensions, check `sounds.json` → ogg resolution, texture refs, duplicate hashes, and print the format→version table. Everything flagged above is mechanically checkable.
 6. **Asset diet:** drop `.packsmc/`, `pack.credits.txt`, `old font/`, `entity/endercrystal/`, legacy painting singles, and the 56 duplicate PNGs; re-encode the 1024² GUI/panorama textures (or justify them) — this alone likely cuts ~20% of download size, which matters for forced-download-on-join.
+
+---
+
+## Deep-Dive Addendum — romanica-resourcepack (2026-10-23, pass 2)
+
+The pass-2 effort on this repo was cross-repo verification (the pack itself was exhaustively validated in pass 1), which produced two corrections and one confirmation.
+
+### Corrections to pass 1
+
+1. **[P1 → P3] "Custom sounds regression" is a dead contract, not a live one.** The cross-repo audit grepped the entire plugin for `playsound|custom_sound|gang_upgrade|shop_purchase`: **nothing references the legacy custom sound keys** (the only hit is a table rename, `gang_upgrade_levels → legion_upgrade_levels`, `DatabaseManager.kt:383`). No plugin code can go silent because the sounds are missing — restoring them is still worth doing if any datapack/command blocks use them, but nothing in the codebase does. Downgraded.
+2. **[P1 stands, context added] The five format zips are redundant binaries** — CRC-identical to each other, no `pack.mcmeta`, 1.13+ texture paths inside packs labelled for 1.7-1.20. They serve no purpose any code path needs: the plugin serves **only** `resourcepack.zip` (via `PackPushService.kt` + GitHub release URL). Recommendation unchanged: delete them from the tree and history-bloat concern goes with them.
+3. **[Confirmed good] The pack players receive IS the pack in this repo.** Plugin `config.yml:996-1007` points at the GitHub release asset `ImperiumMC_TexturePack_v2.0.8_26.2_BASE.zip`; the plugin resolves its SHA1 at runtime and caches it (`PackPushService.kt:54-103`). Verified live: that asset's SHA1 is `50ae213c7af4f86cc4ff230795ac0cace52ea76e` — **byte-identical to the committed `resourcepack.zip`** (48,912,936 bytes). No hash drift is structurally possible while the release-asset URL doesn't change. One caveat: the URL pins `github.com/MylesThePro1/imperiummc-resourcepack` (old owner namespace — works today via redirect, will break when the release flow moves to Romanica-MC releases; update config when it does).
+
+### Revised recommendations
+
+1. (Unchanged, P0) Fix or delete the five format zips — with the added knowledge that nothing consumes them, deletion is the low-effort option.
+2. (Downgraded) Restore `sounds.json` + the three custom oggs only if datapacks/command blocks use them — the plugin doesn't.
+3. (New) Update `PackPushService`'s configured URL to the Romanica-MC release location before the next pack release, so the runtime SHA1 pin follows.
+4. (Unchanged) Honest `pack.mcmeta` (`min_format` ≈ [46,0], real `max_format`, description version), stop committing zips, add the CI validator, asset diet — all as in pass 1.
+
+Full cross-repo contract table: [2026-10-23-cross-repo-audit.md in RomanicaPlugin](https://github.com/Romanica-MC/RomanicaPlugin/blob/master/docs/reviews/2026-10-23-cross-repo-audit.md).
