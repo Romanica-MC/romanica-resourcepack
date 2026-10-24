@@ -68,3 +68,15 @@ The pass-2 effort on this repo was cross-repo verification (the pack itself was 
 4. (Unchanged) Honest `pack.mcmeta` (`min_format` ≈ [46,0], real `max_format`, description version), stop committing zips, add the CI validator, asset diet — all as in pass 1.
 
 Full cross-repo contract table: [2026-10-23-cross-repo-audit.md in RomanicaPlugin](https://github.com/Romanica-MC/RomanicaPlugin/blob/master/docs/reviews/2026-10-23-cross-repo-audit.md).
+
+---
+
+## Pass 3 Addendum — romanica-resourcepack (2026-10-24)
+
+No new pack-internal findings; the org operations audit (same folder, `2026-10-24-org-operations-audit.md` in RomanicaPlugin) sharpened the release-engineering picture:
+
+- **Version drift is now measured three ways**: the served pack (plugin pushes the `textures`-tag v2.0.8 asset via the old `MylesThePro1/` path — HTTP 200 through the rename redirect) vs the tree zip (self-describes **v2.0.7**) vs the latest versioned release (**v2.0.6**). The plugin-repo's copy of the v2.0.8 asset 404s anonymously because that repo is private — the public pack repo is the only working source.
+- The repo has **no CI at all** — the pass-1 recommendation (one validation script on push) remains the single highest-leverage item here.
+- Branch hygiene is clean (only `main`) — the fixes are all releases + config, not branches.
+
+Recommendation order unchanged from pass 1, with the org-audit additions folded in: fix/delete the format zips (P0), honest `pack.mcmeta`, versioned releases + plugin URL repoint to immutable Romanica-MC tag URLs, CI validator, asset diet.
