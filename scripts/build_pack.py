@@ -15,13 +15,24 @@ import zipfile
 
 DESCRIPTION = "Romanica Texture Pack v2.0.8"
 
-# Conversion leftovers from the packsmc.com converter, and an unreferenced font backup.
+# Conversion leftovers from the packsmc.com converter, an unreferenced font backup,
+# and a pre-1.13 path leftover (the modern entity path is end_crystal/).
 DROP_EXACT = {"pack.credits.txt"}
-DROP_PREFIXES = ("assets/minecraft/.packsmc/", "assets/minecraft/font/old font/")
+DROP_PREFIXES = (
+    "assets/minecraft/.packsmc/",
+    "assets/minecraft/font/old font/",
+    "assets/minecraft/textures/entity/endercrystal/",
+)
 
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 FILE_MODE = 0o100644
 DESCRIPTION_RE = re.compile(r'("description"\s*:\s*)"(?:[^"\\]|\\.)*"')
+
+# Honest format range (review pass-1 P1): the pack uses 1.21.4+ items/ definitions
+# and 1.21.2+ equipment/ layers, so a [3,0] floor (1.11) was false advertising and
+# 999 over-promised against future format bumps. Current format is 88.
+MIN_FORMAT = [46, 0]   # 1.21.4
+MAX_FORMAT = [100, 0]
 
 
 def dropped(name: str) -> bool:
@@ -29,15 +40,18 @@ def dropped(name: str) -> bool:
 
 
 def set_description(raw: bytes) -> bytes:
-    # Edit the string in place rather than re-serialising, so the rest of the file keeps
+    # Edit the fields in place rather than re-serialising, so the rest of the file keeps
     # its exact bytes.
-    text = raw.decode("utf-8")
+    text = raw.decode("utf-8-sig")
     new, count = DESCRIPTION_RE.subn(lambda m: m.group(1) + json.dumps(DESCRIPTION), text)
     if count != 1:
         raise SystemExit(f"pack.mcmeta: expected one description, found {count}")
-    if json.loads(new)["pack"]["description"] != DESCRIPTION:
+    parsed = json.loads(new)
+    if parsed["pack"]["description"] != DESCRIPTION:
         raise SystemExit("pack.mcmeta: description edit did not take")
-    return new.encode("utf-8")
+    parsed["pack"]["min_format"] = MIN_FORMAT
+    parsed["pack"]["max_format"] = MAX_FORMAT
+    return json.dumps(parsed, indent=2).encode("utf-8")
 
 
 def build(src: str, dst: str) -> None:

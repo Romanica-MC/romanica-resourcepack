@@ -25,3 +25,11 @@ sha1sum resourcepack.zip   # put this in the plugin config with the new URL
 Running `build_pack.py` on its own output gives the same bytes, so the SHA-1 only changes when the content does.
 
 The Bedrock packs (`ImperiumMC_Bedrock_v1/v2.zip`) and the EFFECTS pack exist only as release assets, not in this tree.
+
+## Tree zip vs the served pack
+
+The plugin pushes the **release asset** (`resource_pack.external-url` in its config,
+`.../releases/download/textures/ImperiumMC_TexturePack_v2.0.8_26.2_BASE.zip`), whose SHA-1
+it resolves at runtime and caches — `resourcepack.zip` in this tree is the **source of
+record**, not what players download. Cutting a versioned `v2.0.8` release from this branch
+and repointing the plugin config is the open follow-up (review pass-1 rec 4).
