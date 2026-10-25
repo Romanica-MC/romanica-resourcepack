@@ -1,0 +1,31 @@
+name: Validate packs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate JSON, PNG signatures and pack.mcmeta in every zip
+        run: python3 scripts/validate_packs.py .
+
+      - name: resourcepack.zip rebuilds byte-for-byte
+        if: success() || failure()
+        run: |
+          python3 scripts/build_pack.py resourcepack.zip "$RUNNER_TEMP/rebuilt.zip"
+          sha1sum resourcepack.zip "$RUNNER_TEMP/rebuilt.zip"
+          cmp resourcepack.zip "$RUNNER_TEMP/rebuilt.zip"
