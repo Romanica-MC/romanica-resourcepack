@@ -24,7 +24,7 @@ sha1sum resourcepack.zip   # put this in the plugin config with the new URL
 
 Running `build_pack.py` on its own output gives the same bytes, so the SHA-1 only changes when the content does.
 
-The Bedrock packs (`ImperiumMC_Bedrock_v1/v2.zip`) and the EFFECTS pack exist only as release assets, not in this tree.
+The BASE pack ships as the immutable [v2.0.9 release](../../releases/tag/v2.0.9) (`Romanica_TexturePack_v2.0.9_26.2_BASE.zip`, SHA-1 139e8dd47d62342b74b4b4e525affb7521e583bf) — cut from this tree's `resourcepack.zip`, which is the single source. The Bedrock packs (`ImperiumMC_Bedrock_v1/v2.zip`) and the EFFECTS pack exist only as release assets, not in this tree (see the Bedrock v1-vs-v2 open issue).
 
 ## Tree zip vs the served pack
 
